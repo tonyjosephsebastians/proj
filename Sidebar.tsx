@@ -1,7 +1,11 @@
 import React from 'react';
 import { Home, Building2, DollarSign, Box, BarChart2, LogOut } from 'lucide-react';
 
-const Sidebar = () => {
+interface SidebarProps {
+  onSelect: (option: string) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onSelect }) => {
   const menuItems = [
     { icon: <Building2 size={22} />, label: 'COMPANY' },
     { icon: <DollarSign size={22} />, label: 'NATURAL ACCOUNT' },
@@ -19,6 +23,7 @@ const Sidebar = () => {
           <div
             key={index}
             className="flex items-center gap-3 bg-green-600 hover:bg-green-500 p-4 rounded-xl cursor-pointer transition"
+            onClick={() => onSelect(item.label)}
           >
             {item.icon}
             <span className="font-semibold">{item.label}</span>
