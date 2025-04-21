@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import MappingOptions from '../components/MappingOptions';
 
 const Dashboard = () => {
+  const [selectedOption, setSelectedOption] = useState<string>('');
+
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
@@ -11,14 +14,17 @@ const Dashboard = () => {
       {/* Main Content */}
       <div className="flex flex-1">
         {/* Sidebar */}
-        <Sidebar />
+        <Sidebar onSelect={(option) => setSelectedOption(option)} />
 
         {/* Main Area */}
         <main className="flex-1 bg-gray-100 p-8">
-          <h1 className="text-2xl font-bold mb-6">Welcome to the Dashboard!</h1>
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <p className="text-gray-500">Select an option from the left sidebar.</p>
-          </div>
+          {!selectedOption ? (
+            <div className="text-gray-500 text-center mt-20 text-lg">
+              Please select an option from the left sidebar.
+            </div>
+          ) : (
+            <MappingOptions selectedOption={selectedOption} />
+          )}
         </main>
       </div>
     </div>
