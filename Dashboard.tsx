@@ -1,27 +1,25 @@
-import { useState, useEffect } from 'react';
+import React from 'react';
 import Sidebar from '../components/Sidebar';
-import Dropdown from '../components/Dropdown';
-import API from '../api';
+import Header from '../components/Header';
 
 const Dashboard = () => {
-  const [selected, setSelected] = useState('');
-  const [options, setOptions] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchOptions = async () => {
-      const res = await API.get('/options');
-      setOptions(res.data);
-    };
-    fetchOptions();
-  }, []);
-
   return (
-    <div className="flex">
-      <Sidebar />
-      <div className="flex-1 p-8">
-        <h2 className="text-xl font-semibold mb-4">What do you need help with?</h2>
-        <Dropdown options={options} selected={selected} onChange={setSelected} />
-        <p className="mt-4">You selected: <strong>{selected || 'None'}</strong></p>
+    <div className="flex flex-col h-screen">
+      {/* Header */}
+      <Header />
+
+      {/* Main Content */}
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <Sidebar />
+
+        {/* Main Area */}
+        <main className="flex-1 bg-gray-100 p-8">
+          <h1 className="text-2xl font-bold mb-6">Welcome to the Dashboard!</h1>
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <p className="text-gray-500">Select an option from the left sidebar.</p>
+          </div>
+        </main>
       </div>
     </div>
   );
