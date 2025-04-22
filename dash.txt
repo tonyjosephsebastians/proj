@@ -1,0 +1,193 @@
+// src/App.tsx
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import Dashboard from './pages/Dashboard';
+
+const App = () => {
+  const isAuthenticated = !!localStorage.getItem('token');
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} />
+        <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/" />} />
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;
+
+// src/pages/LoginPage.tsx
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+
+const LoginPage = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    // Dummy LDAP authentication call
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      });
+      if (response.ok) {
+        localStorage.setItem('token', 'dummy-token');
+        navigate('/dashboard');
+      } else {
+        alert('Invalid credentials');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
+        <Input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} className="mb-4" />
+        <Input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="mb-6" />
+        <Button onClick={handleLogin} className="w-full">Login</Button>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;
+
+// src/pages/Dashboard.tsx
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Download, Search } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const Dashboard = () => {
+  const [activeOption, setActiveOption] = useState('currentToFuture');
+  const [gcaInput, setGcaInput] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [dataTable, setDataTable] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      alert('Session will expire in 5 minutes!');
+    }, 25 * 60 * 1000);
+    const logoutTimer = setTimeout(() => {
+      handleLogout();
+    }, 30 * 60 * 1000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(logoutTimer);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    window.location.href = '/';
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setUploadedFile(file);
+  };
+
+  const handleProcessGCA = async () => {
+    // Dummy backend call to process GCA input
+    console.log('Processing GCA', gcaInput, uploadedFile);
+    setDataTable([{ id: 1, value: 'Sample Result' }]);
+  };
+
+  const handleMappingSearch = async () => {
+    console.log('Searching Mapping for:', searchTerm);
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([JSON.stringify(dataTable)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <div className="bg-gray-800 text-white w-64 p-6 space-y-4">
+        <h2 className="text-xl font-bold mb-4">TD FRP Mapping Tool</h2>
+        <Button variant="ghost" className="w-full text-left" onClick={() => setActiveOption('currentToFuture')}>Current ➔ Future</Button>
+        <Button variant="ghost" className="w-full text-left" onClick={() => setActiveOption('futureToCurrent')}>Future ➔ Current</Button>
+        <Button variant="ghost" className="w-full text-left" onClick={() => setActiveOption('gcaToCcoa')}>GCA ➔ CCOA</Button>
+        <Button variant="ghost" className="w-full text-left text-red-500" onClick={handleLogout}>Logout</Button>
+      </div>
+
+      {/* Main Dashboard */}
+      <div className="flex-1 bg-gray-100 p-8">
+        {activeOption === 'currentToFuture' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-6 rounded-2xl shadow-lg">
+            <h1 className="text-2xl font-bold mb-4">Current ➔ Future Mapping</h1>
+            <div className="flex items-center space-x-4">
+              <Input placeholder="Search Current" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-1/2" />
+              <Button onClick={handleMappingSearch}><Search className="w-4 h-4 mr-2" />Search</Button>
+            </div>
+          </motion.div>
+        )}
+
+        {activeOption === 'futureToCurrent' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-6 rounded-2xl shadow-lg">
+            <h1 className="text-2xl font-bold mb-4">Future ➔ Current Mapping</h1>
+            <div className="flex items-center space-x-4">
+              <Input placeholder="Search Future" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-1/2" />
+              <Button onClick={handleMappingSearch}><Search className="w-4 h-4 mr-2" />Search</Button>
+            </div>
+          </motion.div>
+        )}
+
+        {activeOption === 'gcaToCcoa' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-6 rounded-2xl shadow-lg">
+            <h1 className="text-2xl font-bold mb-4">GCA ➔ CCOA Mapping</h1>
+            <div className="flex flex-col space-y-4">
+              <Input placeholder="Enter GCA String" value={gcaInput} onChange={e => setGcaInput(e.target.value)} />
+              <Input type="file" onChange={handleFileUpload} />
+              <Button onClick={handleProcessGCA}>Process</Button>
+              {dataTable.length > 0 && (
+                <div className="mt-6">
+                  <Button onClick={handleDownload} variant="outline" className="mb-4">
+                    <Download className="w-4 h-4 mr-2" />Download Table
+                  </Button>
+                  <table className="min-w-full bg-white border">
+                    <thead>
+                      <tr>
+                        <th className="py-2 border-b">ID</th>
+                        <th className="py-2 border-b">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dataTable.map((row, index) => (
+                        <tr key={index}>
+                          <td className="py-2 border-b text-center">{row.id}</td>
+                          <td className="py-2 border-b text-center">{row.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
